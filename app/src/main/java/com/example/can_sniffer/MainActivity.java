@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.example.can_sniffer.composer.DataComposer;
 import com.example.can_sniffer.obd.OBDManager;
@@ -151,6 +152,11 @@ public class MainActivity extends AppCompatActivity{
         public void onStringReady(String text) {
             adapter.setItemValue(text,null, false);
             runOnUiThread(updaterUI);
+        }
+
+        @Override
+        public void onStatus(String text) {
+            Toast.makeText(MainActivity.this,text, Toast.LENGTH_SHORT).show();
         }
 
         private Runnable updaterUI=new Runnable() {

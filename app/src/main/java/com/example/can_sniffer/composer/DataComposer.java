@@ -24,6 +24,7 @@ public class DataComposer implements LocationListener, UsbUartReader.ArduinoCANL
     public interface CANdataListener{
         void onDataReady(int ID, int[] data);
         void onStringReady(String text);
+        void onStatus(String text);
     };
 
     public DataComposer(){
@@ -62,5 +63,10 @@ public class DataComposer implements LocationListener, UsbUartReader.ArduinoCANL
     @Override
     public void onStringRecieved(String text) {
         listener.onStringReady(text);
+    }
+
+    @Override
+    public void onStatusListener(String text) {
+        listener.onStatus(text);
     }
 }

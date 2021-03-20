@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "mcp2515.h"
 
 const struct MCP2515::TXBn_REGS MCP2515::TXB[MCP2515::N_TXBUFFERS] = {
@@ -49,15 +50,22 @@ MCP2515::ERROR MCP2515::reset(void)
 
     setRegister(MCP_CANINTE, CANINTF_RX0IF | CANINTF_RX1IF | CANINTF_ERRIF | CANINTF_MERRF);
 
+    // receives all valid messages using either Standard or Extended Identifiers that
+    // meet filter criteria. RXF0 is applied for RXB0, RXF1 is applied for RXB1
     modifyRegister(MCP_RXB0CTRL,
-                   RXBnCTRL_RXM_MASK | RXB0CTRL_BUKT,
-                   RXBnCTRL_RXM_STDEXT | RXB0CTRL_BUKT);
-    modifyRegister(MCP_RXB1CTRL, RXBnCTRL_RXM_MASK, RXBnCTRL_RXM_STDEXT);
+                   RXBnCTRL_RXM_MASK | RXB0CTRL_BUKT | RXB0CTRL_FILHIT_MASK,
+                   RXBnCTRL_RXM_STDEXT | RXB0CTRL_BUKT | RXB0CTRL_FILHIT);
+    modifyRegister(MCP_RXB1CTRL,
+                   RXBnCTRL_RXM_MASK | RXB1CTRL_FILHIT_MASK,
+                   RXBnCTRL_RXM_STDEXT | RXB1CTRL_FILHIT);
 
     // clear filters and masks
-    /*RXF filters[] = {RXF0, RXF1, RXF2, RXF3, RXF4, RXF5};
+    // do not filter any standard frames for RXF0 used by RXB0
+    // do not filter any extended frames for RXF1 used by RXB1
+    RXF filters[] = {RXF0, RXF1, RXF2, RXF3, RXF4, RXF5};
     for (int i=0; i<6; i++) {
-        ERROR result = setFilter(filters[i], true, 0);
+        bool ext = (i == 1);
+        ERROR result = setFilter(filters[i], ext, 0);
         if (result != ERROR_OK) {
             return result;
         }
@@ -69,7 +77,7 @@ MCP2515::ERROR MCP2515::reset(void)
         if (result != ERROR_OK) {
             return result;
         }
-    }*/
+    }
 
     return ERROR_OK;
 }
@@ -226,7 +234,7 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
             cfg3 = MCP_8MHz_31k25BPS_CFG3;
             break;
 
-            case (CAN_33KBPS):                                             //  33.33KBPS
+            case (CAN_33KBPS):                                              //  33.333KBPS
             cfg1 = MCP_8MHz_33k3BPS_CFG1;
             cfg2 = MCP_8MHz_33k3BPS_CFG2;
             cfg3 = MCP_8MHz_33k3BPS_CFG3;
@@ -313,7 +321,7 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
             cfg3 = MCP_16MHz_20kBPS_CFG3;
             break;
 
-            case (CAN_33KBPS):                                              //  20Kbps
+            case (CAN_33KBPS):                                              //  33.333Kbps
             cfg1 = MCP_16MHz_33k3BPS_CFG1;
             cfg2 = MCP_16MHz_33k3BPS_CFG2;
             cfg3 = MCP_16MHz_33k3BPS_CFG3;
@@ -326,6 +334,7 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
             break;
 
             case (CAN_50KBPS):                                              //  50Kbps
+            cfg1 = MCP_16MHz_50kBPS_CFG1;
             cfg2 = MCP_16MHz_50kBPS_CFG2;
             cfg3 = MCP_16MHz_50kBPS_CFG3;
             break;
@@ -335,6 +344,12 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
             cfg2 = MCP_16MHz_80kBPS_CFG2;
             cfg3 = MCP_16MHz_80kBPS_CFG3;
             break;
+
+            case (CAN_83K3BPS):                                             //  83.333Kbps
+            cfg1 = MCP_16MHz_83k3BPS_CFG1;
+            cfg2 = MCP_16MHz_83k3BPS_CFG2;
+            cfg3 = MCP_16MHz_83k3BPS_CFG3;
+            break; 
 
             case (CAN_100KBPS):                                             // 100Kbps
             cfg1 = MCP_16MHz_100kBPS_CFG1;
@@ -381,6 +396,12 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
         case (MCP_20MHZ):
         switch (canSpeed)
         {
+            case (CAN_33KBPS):                                              //  33.333Kbps
+            cfg1 = MCP_20MHz_33k3BPS_CFG1;
+            cfg2 = MCP_20MHz_33k3BPS_CFG2;
+            cfg3 = MCP_20MHz_33k3BPS_CFG3;
+	    break;
+
             case (CAN_40KBPS):                                              //  40Kbps
             cfg1 = MCP_20MHz_40kBPS_CFG1;
             cfg2 = MCP_20MHz_40kBPS_CFG2;
@@ -398,6 +419,12 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
             cfg2 = MCP_20MHz_80kBPS_CFG2;
             cfg3 = MCP_20MHz_80kBPS_CFG3;
             break;
+
+            case (CAN_83K3BPS):                                             //  83.333Kbps
+            cfg1 = MCP_20MHz_83k3BPS_CFG1;
+            cfg2 = MCP_20MHz_83k3BPS_CFG2;
+            cfg3 = MCP_20MHz_83k3BPS_CFG3;
+	    break;
 
             case (CAN_100KBPS):                                             // 100Kbps
             cfg1 = MCP_20MHz_100kBPS_CFG1;
@@ -446,7 +473,6 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
         break;
     }
 
-
     if (set) {
         setRegister(MCP_CNF1, cfg1);
         setRegister(MCP_CNF2, cfg2);
@@ -456,6 +482,28 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
     else {
         return ERROR_FAIL;
     }
+}
+
+MCP2515::ERROR MCP2515::setClkOut(const CAN_CLKOUT divisor)
+{
+    if (divisor == CLKOUT_DISABLE) {
+	/* Turn off CLKEN */
+	modifyRegister(MCP_CANCTRL, CANCTRL_CLKEN, 0x00);
+
+	/* Turn on CLKOUT for SOF */
+	modifyRegister(MCP_CNF3, CNF3_SOF, CNF3_SOF);
+        return ERROR_OK;
+    }
+
+    /* Set the prescaler (CLKPRE) */
+    modifyRegister(MCP_CANCTRL, CANCTRL_CLKPRE, divisor);
+
+    /* Turn on CLKEN */
+    modifyRegister(MCP_CANCTRL, CANCTRL_CLKEN, CANCTRL_CLKEN);
+
+    /* Turn off CLKOUT for SOF */
+    modifyRegister(MCP_CNF3, CNF3_SOF, 0x00);
+    return ERROR_OK;
 }
 
 void MCP2515::prepareId(uint8_t *buffer, const bool ext, const uint32_t id)
@@ -530,6 +578,10 @@ MCP2515::ERROR MCP2515::setFilter(const RXF num, const bool ext, const uint32_t 
 
 MCP2515::ERROR MCP2515::sendMessage(const TXBn txbn, const struct can_frame *frame)
 {
+    if (frame->can_dlc > CAN_MAX_DLEN) {
+        return ERROR_FAILTX;
+    }
+
     const struct TXBn_REGS *txbuf = &TXB[txbn];
 
     uint8_t data[13];
@@ -548,6 +600,10 @@ MCP2515::ERROR MCP2515::sendMessage(const TXBn txbn, const struct can_frame *fra
 
     modifyRegister(txbuf->CTRL, TXB_TXREQ, TXB_TXREQ);
 
+    uint8_t ctrl = readRegister(txbuf->CTRL);
+    if ((ctrl & (TXB_ABTF | TXB_MLOA | TXB_TXERR)) != 0) {
+        return ERROR_FAILTX;
+    }
     return ERROR_OK;
 }
 
@@ -567,7 +623,7 @@ MCP2515::ERROR MCP2515::sendMessage(const struct can_frame *frame)
         }
     }
 
-    return ERROR_FAILTX;
+    return ERROR_ALLTXBUSY;
 }
 
 MCP2515::ERROR MCP2515::readMessage(const RXBn rxbn, struct can_frame *frame)
@@ -690,4 +746,11 @@ void MCP2515::clearMERR()
 	//modifyRegister(MCP_EFLG, EFLG_RX0OVR | EFLG_RX1OVR, 0);
 	//clearInterrupts();
 	modifyRegister(MCP_CANINTF, CANINTF_MERRF, 0);
+}
+
+void MCP2515::clearERRIF()
+{
+    //modifyRegister(MCP_EFLG, EFLG_RX0OVR | EFLG_RX1OVR, 0);
+    //clearInterrupts();
+    modifyRegister(MCP_CANINTF, CANINTF_ERRIF, 0);
 }

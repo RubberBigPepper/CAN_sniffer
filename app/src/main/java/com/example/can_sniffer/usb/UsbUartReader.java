@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -20,6 +21,7 @@ import java.util.concurrent.Executors;
 
 public class UsbUartReader extends BroadcastReceiver implements UsbArduinoCANParser.UsbArduinoCANParserListener {//класс будет читать данные с USB
     private static final int WRITE_WAIT_MILLIS = 1000;
+    private final String TAG="UsbUartReader";
     private UsbManager usbManager=null;
     private UsbSerialPort serialPort=null;
     private SerialInputOutputManager usbIoManager=null;
@@ -34,6 +36,7 @@ public class UsbUartReader extends BroadcastReceiver implements UsbArduinoCANPar
     public interface ArduinoCANListener{
         void onDataRecieved(int ID, int[] data);
         void onStringRecieved(String text);
+        void onStatusListener(String text);
     };
 
     private ArduinoCANListener listener=null;
@@ -148,7 +151,8 @@ public class UsbUartReader extends BroadcastReceiver implements UsbArduinoCANPar
     }
 
     private void status(String text){
-
+        listener.onStatusListener(text);
+        Log.e(TAG, text);
     }
 
     @Override
