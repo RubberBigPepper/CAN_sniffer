@@ -5,13 +5,14 @@ import android.location.Location;
 import com.example.can_sniffer.misc.Coordinates;
 import com.example.can_sniffer.misc.Utils;
 import com.example.can_sniffer.misc.GeoPoint;
-import com.example.can_sniffer.usb.CANWheelSpeed;
+import com.example.can_sniffer.CAN.CANWheelSpeed;
 
 public class LocationCalculator {
     private double declinationPrev = 0.0f;//магнитное склонение
     private GeoPoint lastGeoPoint = null;
     private LocationSpeedKF locSpdKFCAN;
     private double longitudeKoef = 1.0;//коэффициент на сколько нужно умножить координату по X (по долготе) из-за уменьшения длины окружности в зависимости от широты
+    private boolean canUpdate=true;
 
     public LocationCalculator() {
     }
@@ -26,13 +27,15 @@ public class LocationCalculator {
 
     public void predictCAN(CANWheelSpeed canWheelSpeed) {
         if (locSpdKFCAN != null) {
-//            double[] speedVector = wheelSpeedVector.getAbsOrientedSpeed();
-            //locSpdKFCAN.predict(sensorData.getTimestamp(), longitudeKoef * speedVector[0], speedVector[1]);
-            locSpdKFCAN.predict(canWheelSpeed.getPrevTime(), canWheelSpeed.getSpeedX(), canWheelSpeed.getSpeedY());
+            locSpdKFCAN.predict(canWheelSpeed.getPrevTime(), canWheelSpeed.getSpeedX()*longitudeKoef, canWheelSpeed.getSpeedY());
+            canUpdate=true;
         }
     }
 
     public void update(GeoPoint point) {
+        if(!canUpdate)
+            return;
+        canUpdate=false;
         this.declinationPrev = Math.toRadians(point.getDeclination());
         lastGeoPoint = point;
         makeLongitudeKoef();
@@ -54,7 +57,7 @@ public class LocationCalculator {
     public Location getPredictedLocationCAN() {
         if (lastGeoPoint == null || locSpdKFCAN == null)
             return null;
-        Location loc = new Location("KALMAN_obd");
+        Location loc = new Location("CAN");
         GeoPoint predictedPoint = Coordinates.metersToGeoPoint(locSpdKFCAN.getCurrentX(),
                 locSpdKFCAN.getCurrentY());
         loc.setLatitude(predictedPoint.getLatitude());

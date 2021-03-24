@@ -4,6 +4,8 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Environment;
 
+import com.example.can_sniffer.CAN.CANPacket;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -53,15 +55,17 @@ public class DataLogger {
         }
     }
 
-    public void writeData(int ID, int [] data, Location location){
+    public void writeData(CANPacket canPacket, Location location, Location locationPred){
         if (!isOpened())
             return;
         StringBuffer buffer=new StringBuffer();
         buffer.append(index);
         buffer.append(";");
-        buffer.append(String.format("%02X;", ID));
+        buffer.append(canPacket.getTimeStampMs());
+        buffer.append(";");
+        buffer.append(String.format("%02X;", canPacket.getID()));
         int n=0;
-        for (int value:data){
+        for (int value:canPacket.getData()){
             buffer.append(String.format("%d",value));
             buffer.append(";");
             n++;
@@ -71,6 +75,7 @@ public class DataLogger {
             buffer.append(";");
         }
         buffer.append(makeLocationData(location));
+        buffer.append(makeLocationData(locationPred));
         buffer.append("\n");
         try {
             writer.write(buffer.toString());
@@ -102,11 +107,12 @@ public class DataLogger {
 
     public void AppendHeadRow(){
         StringBuffer buffer=new StringBuffer();
-        buffer.append("index;ID;");
+        buffer.append("index;timestamp;ID;");
         for (int n=0;n<8;n++){
             buffer.append(String.format("data_%d;", n));
         }
         buffer.append("gps_lat;gps_lon;gps_speed;gps_alt;gps_bearing;time;");
+        buffer.append("can_lat;can_lon;can_speed;can_alt;can_bearing;time;");
         buffer.append("\n");
         try {
             writer.write(buffer.toString());

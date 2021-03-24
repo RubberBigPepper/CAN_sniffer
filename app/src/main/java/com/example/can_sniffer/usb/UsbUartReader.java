@@ -12,6 +12,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.example.can_sniffer.CAN.CANPacket;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
@@ -33,15 +34,15 @@ public class UsbUartReader extends BroadcastReceiver implements UsbArduinoCANPar
     private int baudRate = 115200;//по умолчанию скорость порта
     private UsbArduinoCANParser usbArduinoParser=new UsbArduinoCANParser(this);
 
-    public interface ArduinoCANListener{
-        void onDataRecieved(int ID, int[] data);
-        void onStringRecieved(String text);
+    public interface CANDataListener{
+        void onCANDataReceived(CANPacket canPacket);
+        void onStringReceived(String text);
         void onStatusListener(String text);
     };
 
-    private ArduinoCANListener listener=null;
+    private CANDataListener listener=null;
 
-    public void init(Context context, @NonNull ArduinoCANListener listener){
+    public void init(Context context, @NonNull CANDataListener listener){
         usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         context.registerReceiver(this, filter);
@@ -156,12 +157,14 @@ public class UsbUartReader extends BroadcastReceiver implements UsbArduinoCANPar
     }
 
     @Override
-    public void onPackedRecieved(int ID, int[] data) {
-        listener.onDataRecieved(ID, data);
+    public void onCANPackedReceived(CANPacket canPacket) {
+        listener.onCANDataReceived(canPacket);
     }
 
     @Override
     public void onStringReceived(String text) {
-        listener.onStringRecieved(text);
+        listener.onStringReceived(text);
     }
+
+    private void parseCANPacket(int ID, int[] data){}
 }

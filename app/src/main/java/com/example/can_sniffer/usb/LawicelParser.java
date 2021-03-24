@@ -4,33 +4,36 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.example.can_sniffer.CAN.CANPacket;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
-//класс будет парсить данные, приходящие от ардуино
-public class UsbArduinoCANParser implements SerialInputOutputManager.Listener {
-    private final String TAG="UsbArduinoCANParser";
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+
+//парсинг пакетов протокола Lawicel (CAN hacker)
+public class LawicelParser implements SerialInputOutputManager.Listener {
+    private final String TAG="LawicelListener";
+    ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
     StringBuffer stringBuffer=new StringBuffer();
     private int startIndex=-1;//откуда начало данных
     private int endIndex=-1;//где конец данных
 
-    interface UsbArduinoCANParserListener{
-        void onCANPackedReceived(CANPacket canPacket);
+    interface LawicelParserListener{
+        void onPackedRecieved(int ID, int[] data);
         void onStringReceived(String text);
     };
 
-    private UsbArduinoCANParserListener listener=null;
+    private LawicelParserListener listener=null;
 
-    public UsbArduinoCANParser(@NonNull UsbArduinoCANParserListener listener){
+    public LawicelParser(@NonNull LawicelParserListener listener){
         this.listener=listener;
     }
-
-   //ID:0xID,0xdata1,data2,data3,data4,data5,data6,data7,data8  - По количеству, может быть меньше
 
     @Override
     public void onNewData(byte[] data) {
         try {
-            stringBuffer.append(new String(data));
+            byteArrayOutputStream.write(data);
+
             parsePacket();
         }catch (Exception ex){
             ex.printStackTrace();
@@ -67,26 +70,20 @@ public class UsbArduinoCANParser implements SerialInputOutputManager.Listener {
         if(fields.length<=1)
             return false;
         int[] data=new int[fields.length-1];//int, чтобы не возиться со знаковым типом byte
-        if (data.length<=8) {
-            try {
-                int ID = parseInt(fields[0]);
-                for (int n = 1; n < fields.length; n++) {
-                    data[n - 1] = parseInt(fields[n]);
-                }
-                CANPacket packet=CANPacket.parsePacket(ID, data);
-                if(packet!=null) {
-                    listener.onCANPackedReceived(packet);
-                    return true;
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return false;
+        try {
+            /*int ID = parseInt(fields[0]);
+            for (int n = 1; n < fields.length; n++) {
+                data[n-1]=parseInt(fields[n]);
             }
+            listener.onPackedRecieved(ID, data);*/
+            return true;
         }
-        return false;
+        catch (Exception ex){
+            ex.printStackTrace();
+            return false;
+        }
     }
 
-    private int parseInt(String text){
-        return Integer.parseInt(text.replace("0x",""), 16);
-    }
+
+
 }

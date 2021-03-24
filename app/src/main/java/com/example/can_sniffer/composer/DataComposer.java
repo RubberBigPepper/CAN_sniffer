@@ -10,16 +10,22 @@ import android.location.LocationManager;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
+import com.example.can_sniffer.CAN.CANDataManager;
+import com.example.can_sniffer.CAN.CANPacket;
 import com.example.can_sniffer.DataLogger;
+import com.example.can_sniffer.filters.LocationCalculator;
+import com.example.can_sniffer.misc.GeoPoint;
 import com.example.can_sniffer.usb.UsbUartReader;
 
 //класс будет главным собирателем данных с CAN и GPS
-public class DataComposer implements LocationListener, UsbUartReader.ArduinoCANListener {
+public class DataComposer implements LocationListener, UsbUartReader.CANDataListener {
     private LocationManager locationManager;
     private Location lastKnownLocation=null;
     private UsbUartReader arduinoReader=new UsbUartReader();
     private DataLogger logger=new DataLogger();
     private CANdataListener listener;
+    private CANDataManager canDataManager=new CANDataManager();
+    private LocationCalculator locationCalculator=new LocationCalculator();
 
     public interface CANdataListener{
         void onDataReady(int ID, int[] data);
@@ -52,16 +58,19 @@ public class DataComposer implements LocationListener, UsbUartReader.ArduinoCANL
     @Override
     public void onLocationChanged(@NonNull Location location) {
         lastKnownLocation=location;
+        locationCalculator.update(GeoPoint.parse(location));
     }
 
     @Override
-    public void onDataRecieved(int ID, int[] data) {
-        logger.writeData(ID, data, lastKnownLocation);
-        this.listener.onDataReady(ID, data);
+    public void onCANDataReceived(CANPacket canPacket) {
+        canDataManager.setCANPacket(canPacket);
+        locationCalculator.predictCAN(canDataManager.getCanWheelSpeed());
+        logger.writeData(canPacket, lastKnownLocation, locationCalculator.getPredictedLocationCAN());
+        this.listener.onDataReady(canPacket.getID(), canPacket.getData());
     }
 
     @Override
-    public void onStringRecieved(String text) {
+    public void onStringReceived(String text) {
         listener.onStringReady(text);
     }
 

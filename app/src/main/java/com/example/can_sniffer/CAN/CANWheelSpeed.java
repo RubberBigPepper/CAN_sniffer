@@ -1,9 +1,10 @@
-package com.example.can_sniffer.usb;
+package com.example.can_sniffer.CAN;
 
 //класс будет вычислять азимут движения и скорости по осям, основываясь на скорости по колесам
 public class CANWheelSpeed {
     private double azimuthGPS = 0.0;//азимут движения с ГНСС, в радианах
 
+    //пока захардкодим данные машины, в будущем будем использовать настройки
     private double baseFront = 1.55;//база передних колес
     private double baseRear = 1.55;//база задних колес
     private double weightFront = 0.5;//весовой коэффициент передней оси в расчетах
@@ -24,12 +25,12 @@ public class CANWheelSpeed {
             prevTime = time;
             return;
         }
-        double deltaTime = 0.001 * (time - prevTime);
-        double angleRear = (speedRL - speedRR) / baseRear;//мгновенный угол
-        double angleFront = (speedFL - speedFR) / baseFront;//поворота осей, в радианах
+        double deltaTime = 0.001 * (time - prevTime);//время в секундах - у нас скорость в м/с
+        double angleRear = (speedRL - speedRR) / baseRear;//мгновенный угол, радиан в секунду
+        double angleFront = (speedFL - speedFR) / baseFront;//поворота осей, в радианах в секунду
         azimuth = deltaTime * (angleFront * weightFront + angleRear * weightRear) + azimuthGPS;//угол поворота автомобиля в мировой системе координат
         speed = 0.5 * ((speedFL + speedFR) * weightFront + (speedRL + speedRR) * weightRear) * deltaTime;//средняя скорость движения автомобиля
-        speedX = Math.sin(azimuth) * speed;
+        speedX = Math.sin(azimuth) * speed;//разложение скорости движения автомобиля в вектор в мировой системе координат
         speedY = Math.cos(azimuth) * speed;
         prevTime = time;
     }

@@ -34,10 +34,9 @@ static inline void _put_id(char *buf, int end_offset, canid_t id)
 #define put_sff_id(buf, id) _put_id(buf, 2, id)
 #define put_eff_id(buf, id) _put_id(buf, 7, id)
 
-CanHacker::CanHacker(Stream *stream, Stream *debugStream, uint8_t cs, CAN_CLOCK clock=MCP_16MHZ) {
+CanHacker::CanHacker(Stream *stream, Stream *debugStream, uint8_t cs) {
     _stream = stream;
     _debugStream = debugStream;
-    canClock=clock;
     writeDebugStream(F("Initialization\n"));
 
     _cs = cs;

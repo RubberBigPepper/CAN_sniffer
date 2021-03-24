@@ -7,6 +7,7 @@
 #include "mcp2515.h"
 #include <SPI.h>
 
+
 const int SPI_CS_PIN = 10;
 const int INT_PIN = 2;//пин, который отвечает за INT0 
 
@@ -20,7 +21,8 @@ void setup() {
         
     
     Stream *interfaceStream = &Serial;
-    canHacker = new CanHacker(interfaceStream, NULL, SPI_CS_PIN, MCP_8MHZ);
+    canHacker = new CanHacker(interfaceStream, NULL, SPI_CS_PIN);
+    canHacker ->setClock(MCP_8MHZ);
     lineReader = new CanHackerLineReader(canHacker);
     
     pinMode(INT_PIN, INPUT);

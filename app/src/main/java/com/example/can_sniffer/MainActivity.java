@@ -40,8 +40,8 @@ public class MainActivity extends AppCompatActivity{
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
         if (isFinishing()){
    //         obdManager.StopWork();
             dataComposer.stopWork(this);
