@@ -21,6 +21,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.example.can_sniffer.composer.DataComposer;
+import com.example.can_sniffer.misc.BinaryParserData;
 import com.example.can_sniffer.obd.OBDManager;
 import com.example.can_sniffer.view.DataAdapter;
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+     //   BinaryParserData.testParse();
         CheckPermissionsOrRun();
     }
 

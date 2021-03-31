@@ -59,6 +59,8 @@ public class DataComposer implements LocationListener, UsbUartReader.CANDataList
     public void onLocationChanged(@NonNull Location location) {
         lastKnownLocation=location;
         locationCalculator.update(GeoPoint.parse(location));
+        if (location.hasBearing())
+            canDataManager.getCanWheelSpeed().setAzimuthGPSdeg(location.getBearing());
     }
 
     @Override

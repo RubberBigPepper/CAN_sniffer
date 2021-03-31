@@ -367,6 +367,9 @@ public class OBDManager {
 				return false;
 			int nErrorReadAttempt = 0;//счетчик непрочитанных данных
             ObdRawCommand atmaCmd=new ObdRawCommand("ATMA");//читаем все
+            ReadVIN(preparedSocketStream.cInStream, preparedSocketStream.cOutStream);
+            if (m_cListener!=null)
+                m_cListener.onOneReadTickEnd(m_strVIN);
 			while (true) {
 				boolean bStop=false;
 				if (m_oMutex != null) {

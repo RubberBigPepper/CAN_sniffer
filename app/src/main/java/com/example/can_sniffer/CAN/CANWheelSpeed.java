@@ -20,7 +20,7 @@ public class CANWheelSpeed {
     //получение векторов скорости, если даны скорости с колес (в м/с)
     //time - метка времени, в миллисекундах,
     // speedFL,speedFR,speedRL, speedRR - мгновенные скорости колес в м/с
-    public void calc(long time, double speedFL, double speedFR, double speedRL, double speedRR) {
+    public void calcSpeedXY(long time, double speedFL, double speedFR, double speedRL, double speedRR) {
         if (prevTime == 0) {//для первого значения вычислять не из чего
             prevTime = time;
             return;
